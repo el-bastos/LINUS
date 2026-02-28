@@ -1,3 +1,12 @@
+---
+title: linus
+emoji: 🔬
+colorFrom: blue
+colorTo: orange
+sdk: static
+pinned: false
+---
+
 # linus
 
 Interactive tool for exploring orbital hybridization through real wavefunction computation and 3D visualization. Select an atom, choose a hybridization scheme, and see the actual hybrid orbitals rendered from Slater-type orbital (STO) wavefunctions with Clementi–Raimondi exponents. Built with vanilla JavaScript and Three.js.
