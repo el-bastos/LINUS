@@ -4,6 +4,7 @@ emoji: 🔬
 colorFrom: blue
 colorTo: yellow
 sdk: static
+license: gpl-3.0
 pinned: false
 ---
 
