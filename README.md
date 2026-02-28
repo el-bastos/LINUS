@@ -2,7 +2,7 @@
 title: linus
 emoji: 🔬
 colorFrom: blue
-colorTo: orange
+colorTo: yellow
 sdk: static
 pinned: false
 ---
