@@ -4,10 +4,9 @@
 
 import { ATOMS } from './data/atoms.js';
 import { HYBRIDIZATIONS, getAONames } from './data/hybridizations.js';
-import { computeHybridGrid, computeCustomHybridGrid } from './modules/orbital.js';
+import { computeHybridGrid, computeCustomHybridGrid, computeAOGrid } from './modules/orbital.js';
 import { OrbitalViewer } from './modules/viewer3d.js';
 import { EquationPanel } from './modules/equationPanel.js';
-import { RotationPanel } from './modules/rotationPanel.js';
 
 // ── State ─────────────────────────────────────────────
 
@@ -18,12 +17,12 @@ const state = {
   hybKey: null,
   showAll: false,
   activeHybrid: 0,
-  isovalue: 0.02,
+  isovalue: 0.08,
   gridSize: 64,
   mode: 'preset',  // 'preset' or 'manual' (drag-and-drop)
 };
 
-let viewer, eqPanel, rotPanel;
+let viewer, eqPanel;
 let cachedGrids = null;
 let cachedKey = '';
 
@@ -35,7 +34,6 @@ function init() {
     document.getElementById('equation-panel'),
     onMixChange
   );
-  rotPanel = new RotationPanel(document.getElementById('rotation-panel'));
 
   // Hybrid selection from equation panel
   eqPanel.onHybridSelect = (idx) => {
@@ -45,13 +43,28 @@ function init() {
     }
   };
 
+  // Single-click AO preview
+  eqPanel.onAOPreview = (aoName) => {
+    if (!state.atom) return;
+    const statusEl = document.getElementById('status');
+    statusEl.textContent = 'Computing...';
+    requestAnimationFrame(() => {
+      const gridData = computeAOGrid(state.atom, aoName, 48);
+      if (gridData) {
+        viewer.renderHybrid(gridData, state.isovalue);
+      }
+      statusEl.textContent = '';
+    });
+  };
+
   setupAtomButtons();
   setupHybridButtons();
   setupViewControls();
 
-  // Default: Carbon sp3
+  // Default: Carbon selected, no hybridization active
   selectAtom('C');
-  selectHybridization('sp3');
+  eqPanel.clearMix();
+  viewer.clearMeshes();
 }
 
 // ── Atom selector ─────────────────────────────────────
@@ -83,12 +96,7 @@ function selectAtom(key) {
 
   // Atom info display
   const infoDiv = document.getElementById('atom-info');
-  let infoHTML = `<span class="atom-name">${state.atom.name}</span>`;
-  infoHTML += `<span class="atom-config">${state.atom.valenceConfig}</span>`;
-  if (state.atom.promotedConfig) {
-    infoHTML += `<span class="atom-promoted">→ ${state.atom.promotedConfig} (promoted)</span>`;
-  }
-  infoDiv.innerHTML = infoHTML;
+  infoDiv.innerHTML = `<span class="atom-name">${state.atom.name}</span><span class="atom-config">${state.atom.valenceConfig}</span>`;
 
   // Notes
   const notesDiv = document.getElementById('atom-notes');
@@ -102,21 +110,16 @@ function selectAtom(key) {
   eqPanel.setAtomAOs(state.atom.availableAOs);
   eqPanel.clearMix();
 
-  // Auto-select a hybridization if current one isn't available
-  if (state.atom.hybridizations.length === 0) {
-    // Hydrogen — no hybridization
+  // Keep current hybridization if compatible, otherwise clear
+  if (state.hybKey && state.atom.hybridizations.includes(state.hybKey)) {
+    selectHybridization(state.hybKey);
+  } else {
     state.hybKey = null;
     state.hybridization = null;
     document.querySelectorAll('.hybrid-btn').forEach(b => b.classList.remove('active'));
     eqPanel.updateEquations(null);
-    rotPanel.update(null);
     viewer.clearMeshes();
     updateGeometryInfo(null);
-  } else if (!state.hybKey || !state.atom.hybridizations.includes(state.hybKey)) {
-    const defaultHyb = state.atom.hybridizations[state.atom.hybridizations.length - 1];
-    selectHybridization(defaultHyb);
-  } else {
-    selectHybridization(state.hybKey);
   }
 }
 
@@ -163,7 +166,6 @@ function selectHybridization(key) {
   eqPanel.updateEquations(state.hybridization, state.activeHybrid);
 
   // Update rotation panel
-  rotPanel.update(key);
 
   // Update geometry info
   updateGeometryInfo(state.hybridization);
@@ -188,22 +190,30 @@ function updateGeometryInfo(hyb) {
 // ── Manual mixing (drag-and-drop callback) ────────────
 
 function onMixChange(mixedAOs) {
-  state.mode = 'manual';
   cachedGrids = null;
   cachedKey = '';
 
-  // Clear preset highlight
-  document.querySelectorAll('.hybrid-btn').forEach(b => b.classList.remove('active'));
-
   if (mixedAOs.length === 0) {
+    state.mode = 'manual';
     viewer.clearMeshes();
     viewer._clearAngles();
-    rotPanel.update(null);
+    document.querySelectorAll('.hybrid-btn').forEach(b => b.classList.remove('active'));
     updateGeometryInfo(null);
     return;
   }
 
-  // Compute custom hybrid with equal coefficients
+  // Check if the mixed AOs match a known hybridization — if so, use the preset
+  const matchingHyb = detectHybridization(mixedAOs);
+  if (matchingHyb) {
+    selectHybridization(matchingHyb);
+    return;
+  }
+
+  // Partial mix — show the combined orbital incrementally
+  state.mode = 'manual';
+  document.querySelectorAll('.hybrid-btn').forEach(b => b.classList.remove('active'));
+  updateGeometryInfo(null);
+
   const customAOs = mixedAOs.map(ao => ({ aoName: ao, coefficient: 1 }));
   const statusEl = document.getElementById('status');
   statusEl.textContent = 'Computing...';
@@ -214,14 +224,6 @@ function onMixChange(mixedAOs) {
       viewer.renderHybrid(gridData, state.isovalue);
     }
     statusEl.textContent = '';
-
-    // Try to detect which hybridization type this matches
-    const matchingHyb = detectHybridization(mixedAOs);
-    if (matchingHyb) {
-      rotPanel.update(matchingHyb);
-    } else {
-      rotPanel.update(null);
-    }
   });
 }
 
@@ -311,6 +313,13 @@ function setupViewControls() {
   // Reset camera
   document.getElementById('btn-reset-cam').addEventListener('click', () => {
     viewer.resetCamera();
+  });
+
+  // View orientation buttons
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      viewer.setView(btn.dataset.view);
+    });
   });
 
   // Isovalue slider

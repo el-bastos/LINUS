@@ -33,12 +33,11 @@ export const ATOMS = {
     Z: 6,
     n: 2,
     valenceConfig: '2s²2p²',
-    promotedConfig: '2s¹2p³',
     zeta: { s: 1.5679, p: 1.5187 },
     availableAOs: ['2s', '2px', '2py', '2pz'],
     hybridizations: ['sp', 'sp2', 'sp3'],
     color: '#909090',
-    notes: 'Promotion costs energy, but forming four bonds instead of two more than compensates.',
+    notes: 'Four equivalent sp³ hybrids arise because the molecular wavefunction in compounds like CH₄ distributes electron density equally among four bonds.',
   },
   N: {
     name: 'Nitrogen',

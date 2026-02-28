@@ -8,14 +8,14 @@ import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer
 import { marchingCubes } from './marchingCubes.js';
 
 const COLORS = {
-  positive: 0x4488ff,
+  positive: 0x4499ee,
   negative: 0xff8844,
-  background: 0x1a1a2e,
-  xAxis: 0xff4444,
-  yAxis: 0x44cc44,
-  zAxis: 0x4488ff,
-  grid: 0x333355,
-  angleLine: 0xffff44,
+  background: 0xffffff,
+  xAxis: 0xcc3333,
+  yAxis: 0x33aa33,
+  zAxis: 0x3366cc,
+  grid: 0xcccccc,
+  angleLine: 0x996600,
 };
 
 export class OrbitalViewer {
@@ -43,7 +43,7 @@ export class OrbitalViewer {
     this.scene.background = new THREE.Color(COLORS.background);
 
     this.camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
-    this.camera.position.set(6, 4, 6);
+    this.camera.position.set(9, 6, 9);
     this.camera.lookAt(0, 0, 0);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -68,13 +68,13 @@ export class OrbitalViewer {
   }
 
   _initLights() {
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
-    const dir1 = new THREE.DirectionalLight(0xffffff, 0.7);
+    const dir1 = new THREE.DirectionalLight(0xffffff, 0.6);
     dir1.position.set(5, 5, 5);
     this.scene.add(dir1);
 
-    const dir2 = new THREE.DirectionalLight(0xffffff, 0.3);
+    const dir2 = new THREE.DirectionalLight(0xffffff, 0.25);
     dir2.position.set(-3, -2, -4);
     this.scene.add(dir2);
   }
@@ -127,17 +127,9 @@ export class OrbitalViewer {
       this.coordGroup.add(labelObj);
     }
 
-    // Ground grid in xz plane
-    const gridSize = 8;
-    const gridDiv = 8;
-    const gridHelper = new THREE.GridHelper(gridSize, gridDiv, COLORS.grid, COLORS.grid);
-    gridHelper.material.opacity = 0.3;
-    gridHelper.material.transparent = true;
-    this.coordGroup.add(gridHelper);
-
     // Origin sphere
     const originGeom = new THREE.SphereGeometry(0.08, 16, 16);
-    const originMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const originMat = new THREE.MeshBasicMaterial({ color: 0x333333 });
     this.coordGroup.add(new THREE.Mesh(originGeom, originMat));
   }
 
@@ -321,8 +313,31 @@ export class OrbitalViewer {
   }
 
   resetCamera() {
-    this.camera.position.set(6, 4, 6);
+    this.camera.position.set(9, 6, 9);
     this.camera.lookAt(0, 0, 0);
     this.controls.reset();
+  }
+
+  // Preset camera orientations
+  setView(view) {
+    const d = this.camera.position.distanceTo(this.controls.target);
+    const dirs = {
+      front:  [0, 0, 1],
+      back:   [0, 0, -1],
+      top:    [0, 1, 0],
+      bottom: [0, -1, 0],
+      right:  [1, 0, 0],
+      left:   [-1, 0, 0],
+    };
+    const dir = dirs[view];
+    if (!dir) return;
+    const target = this.controls.target;
+    this.camera.position.set(
+      target.x + dir[0] * d,
+      target.y + dir[1] * d,
+      target.z + dir[2] * d
+    );
+    this.camera.lookAt(target);
+    this.controls.update();
   }
 }

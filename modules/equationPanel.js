@@ -104,6 +104,19 @@ export class EquationPanel {
       const type = aoName.includes('d') ? 'ao-d' : aoName.includes('p') ? 'ao-p' : 'ao-s';
       card.classList.add(type);
 
+      // Single click → preview this AO in the 3D viewer
+      card.addEventListener('click', () => {
+        if (this._onAOPreview) this._onAOPreview(aoName);
+      });
+
+      // Double-click → add to mixing zone
+      card.addEventListener('dblclick', () => {
+        if (!this.mixedAOs.includes(aoName)) {
+          this.addToMix(aoName);
+        }
+      });
+
+      // Drag → add to mixing zone
       card.addEventListener('dragstart', (e) => {
         e.dataTransfer.setData('text/plain', aoName);
         e.dataTransfer.effectAllowed = 'copy';
@@ -112,13 +125,6 @@ export class EquationPanel {
 
       card.addEventListener('dragend', () => {
         card.classList.remove('dragging');
-      });
-
-      // Also support click-to-add
-      card.addEventListener('click', () => {
-        if (!this.mixedAOs.includes(aoName)) {
-          this.addToMix(aoName);
-        }
       });
 
       this.aoCards.appendChild(card);
@@ -264,6 +270,7 @@ export class EquationPanel {
   }
 
   set onHybridSelect(fn) { this._onHybridSelect = fn; }
+  set onAOPreview(fn) { this._onAOPreview = fn; }
 
   highlightHybrid(index) {
     this.activeHybrid = index;

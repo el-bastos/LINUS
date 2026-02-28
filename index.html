@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LINUS — Orbital Hybridization Explorer</title>
+  <title>linus — Orbital Hybridization Explorer</title>
 
   <!-- KaTeX -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
@@ -28,20 +28,15 @@
 
   <!-- ── Top bar ────────────────────────────────────── -->
   <header class="top-bar">
-    <div class="app-title">LINUS</div>
-    <div class="app-subtitle">Linear Combinations Unveiled Interactively for Students</div>
+    <div class="app-title">linus</div>
+    <div class="app-subtitle">Orbital Hybridization Explorer</div>
   </header>
 
   <!-- ── Three-panel layout ─────────────────────────── -->
   <div class="main-panels">
 
-    <!-- LEFT: Rotation analogy -->
+    <!-- LEFT: Equations + Mixing zone + AO cards -->
     <div class="left-panel">
-      <div id="rotation-panel"></div>
-    </div>
-
-    <!-- CENTER: Equations + Mixing zone + AO cards -->
-    <div class="center-panel">
       <div id="equation-panel"></div>
     </div>
 
@@ -57,11 +52,19 @@
         <button id="btn-angles" class="vctrl-btn" title="Toggle angle measurements">Angles</button>
         <button id="btn-reset-cam" class="vctrl-btn" title="Reset camera">Reset</button>
       </div>
+      <div class="viewer-views">
+        <button class="view-btn" data-view="front" title="Front (xy plane)">Front</button>
+        <button class="view-btn" data-view="back" title="Back">Back</button>
+        <button class="view-btn" data-view="top" title="Top (xz plane)">Top</button>
+        <button class="view-btn" data-view="bottom" title="Bottom">Bottom</button>
+        <button class="view-btn" data-view="right" title="Right (yz plane)">Right</button>
+        <button class="view-btn" data-view="left" title="Left">Left</button>
+      </div>
 
       <div class="viewer-iso">
         <span>Isosurface</span>
-        <input type="range" id="iso-slider" min="0.005" max="0.08" step="0.001" value="0.02">
-        <span id="iso-value">0.020</span>
+        <input type="range" id="iso-slider" min="0.005" max="0.08" step="0.001" value="0.08">
+        <span id="iso-value">0.080</span>
       </div>
 
       <div class="viewer-legend">
