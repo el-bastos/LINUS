@@ -7,6 +7,7 @@ import { HYBRIDIZATIONS, getAONames } from './data/hybridizations.js';
 import { computeHybridGrid, computeCustomHybridGrid, computeAOGrid } from './modules/orbital.js';
 import { OrbitalViewer } from './modules/viewer3d.js';
 import { EquationPanel } from './modules/equationPanel.js';
+import { SCharacterPanel } from './modules/sCharacterPanel.js';
 
 // ── State ─────────────────────────────────────────────
 
@@ -22,7 +23,7 @@ const state = {
   mode: 'preset',  // 'preset' or 'manual' (drag-and-drop)
 };
 
-let viewer, eqPanel;
+let viewer, eqPanel, sCharPanel;
 let cachedGrids = null;
 let cachedKey = '';
 
@@ -56,6 +57,9 @@ function init() {
       statusEl.textContent = '';
     });
   };
+
+  sCharPanel = new SCharacterPanel(document.getElementById('schar-panel'));
+  sCharPanel.onCoefficientsChange = onSCharChange;
 
   setupAtomButtons();
   setupHybridButtons();
@@ -120,6 +124,7 @@ function selectAtom(key) {
     eqPanel.updateEquations(null);
     viewer.clearMeshes();
     updateGeometryInfo(null);
+    sCharPanel.deactivate();
   }
 }
 
@@ -165,7 +170,12 @@ function selectHybridization(key) {
   // Update equations
   eqPanel.updateEquations(state.hybridization, state.activeHybrid);
 
-  // Update rotation panel
+  // Activate s-character panel for sp³ with lone pairs
+  if (key === 'sp3' && state.atom.lonePairs && state.atom.lonePairs.sp3 > 0) {
+    sCharPanel.activate(state.atom, state.atom.lonePairs.sp3);
+  } else {
+    sCharPanel.deactivate();
+  }
 
   // Update geometry info
   updateGeometryInfo(state.hybridization);
@@ -199,6 +209,7 @@ function onMixChange(mixedAOs) {
     viewer._clearAngles();
     document.querySelectorAll('.hybrid-btn').forEach(b => b.classList.remove('active'));
     updateGeometryInfo(null);
+    sCharPanel.deactivate();
     return;
   }
 
@@ -223,6 +234,57 @@ function onMixChange(mixedAOs) {
     if (gridData) {
       viewer.renderHybrid(gridData, state.isovalue);
     }
+    statusEl.textContent = '';
+  });
+}
+
+// ── s-Character slider callback ─────────────────────
+
+function onSCharChange(coeffData, angle, s2Bond, s2LP) {
+  if (!state.atom) return;
+
+  const statusEl = document.getElementById('status');
+  statusEl.textContent = 'Computing...';
+
+  // Build a hybData-like object for rendering
+  const hybLike = {
+    orbitals: coeffData.orbitals,
+    coefficients: coeffData.coefficients,
+    count: coeffData.count,
+    labels: coeffData.labels,
+    geometry: `${angle.toFixed(1)}° (Coulson)`,
+    idealAngle: angle,
+    description: `${coeffData.bondingCount} bonding + ${coeffData.lpCount} lone pair${coeffData.lpCount !== 1 ? 's' : ''}`,
+    latex: coeffData.coefficients.map((row, i) => {
+      const label = coeffData.labels[i];
+      const terms = row.map((c, j) => {
+        if (Math.abs(c) < 1e-10) return null;
+        const aoName = coeffData.orbitals[j] === 's' ? 's' : `p_${coeffData.orbitals[j].slice(1)}`;
+        const sign = c >= 0 ? '+' : '-';
+        return `${sign}${Math.abs(c).toFixed(4)}\\,${aoName}`;
+      }).filter(Boolean).join(' ');
+      return `${label} = ${terms}`;
+    }),
+  };
+
+  // Use lower grid while dragging for responsiveness
+  const gridSize = 48;
+
+  requestAnimationFrame(() => {
+    cachedGrids = [];
+    for (let i = 0; i < hybLike.count; i++) {
+      cachedGrids.push(computeHybridGrid(state.atom, hybLike, i, gridSize));
+    }
+    cachedKey = '';  // don't cache s-character variants
+
+    // Always show all hybrids in s-character mode
+    state.showAll = true;
+    const showAllBtn = document.getElementById('btn-show-all');
+    showAllBtn.classList.add('active');
+    showAllBtn.textContent = 'Single';
+
+    viewer.renderAllHybrids(cachedGrids, state.isovalue, hybLike);
+    updateGeometryInfo(hybLike);
     statusEl.textContent = '';
   });
 }

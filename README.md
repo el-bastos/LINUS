@@ -57,6 +57,14 @@ All Slater exponents from Clementi & Raimondi (1963) *J. Chem. Phys.* **38**, 26
 - Sign table showing coefficient signs for each hybrid
 - Click an equation to highlight the corresponding orbital in 3D
 
+### s Character
+
+- Slider to vary s character of bonding hybrids in sp³ systems with lone pairs (N, O, S)
+- Bond angle computed live via Coulson's theorem: cos(θ) = −s²/(1−s²)
+- Lone pair s character derived automatically from normalization constraint
+- Reference markers for ideal sp³ (109.5°) and experimental values (NH₃ 107.8°, H₂O 104.5°)
+- All 4 hybrid orbitals rendered simultaneously, showing how lone pairs fatten as they gain s character
+
 ## Architecture
 
 ```
@@ -71,6 +79,7 @@ linus/
     ├── orbital.js           # STO evaluation and grid computation
     ├── viewer3d.js          # Three.js 3D renderer
     ├── equationPanel.js     # Equation display and drag-and-drop mixing
+    ├── sCharacterPanel.js   # s-Character slider (Coulson's theorem)
     └── marchingCubes.js     # Isosurface extraction
 ```
 

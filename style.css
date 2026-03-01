@@ -539,6 +539,104 @@ html, body {
   line-height: 1.4;
 }
 
+/* ── s-Character panel ──────────────────────────────── */
+
+.schar-panel { margin-top: 16px; }
+
+.schar-body {
+  padding: 10px;
+  background: var(--bg);
+  border-radius: var(--radius);
+}
+
+.schar-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.schar-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.schar-slider {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.schar-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 48px;
+  text-align: right;
+}
+
+.schar-angle-row, .schar-lp-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.schar-angle-label, .schar-lp-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.schar-angle-val {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.schar-lp-val {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.schar-eq {
+  margin-top: 8px;
+  padding: 6px 0;
+  overflow-x: auto;
+}
+
+.schar-refs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.schar-ref-marker {
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.schar-ref-marker:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.schar-ref-marker.expt {
+  border-color: #cc8833;
+  color: #996600;
+}
+
+.schar-ref-marker.expt:hover {
+  background: #fff8ee;
+}
+
 /* ── KaTeX overrides ─────────────────────────────────── */
 .katex-display { margin: 0 !important; }
 .katex { font-size: 1em !important; }
